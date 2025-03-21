@@ -1,0 +1,13 @@
+prefix=D:/Deep Learning Projects/breast_cancer_classi/venv/Library
+exec_prefix=D:/Deep Learning Projects/breast_cancer_classi/venv/Library
+libdir=D:/Deep Learning Projects/breast_cancer_classi/venv/Library/lib
+sharedlibdir=D:/Deep Learning Projects/breast_cancer_classi/venv/Library/lib
+includedir=D:/Deep Learning Projects/breast_cancer_classi/venv/Library/include
+
+Name: zlib
+Description: zlib compression library
+Version: 1.2.13
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lz
+Cflags: -I${includedir}
