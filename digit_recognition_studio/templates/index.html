@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digit Recognition Studio — Interactive Deep Learning</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="background-glows">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-main">
+                <span class="logo-icon"><i class="material-icons">query_stats</i></span>
+                <h1>Digit Recognition <span class="text-gradient">Studio</span></h1>
+            </div>
+            <div class="status-container">
+                <span class="status-label">Model Status:</span>
+                <span class="status-badge {% if 'Active' in model_status %}status-active{% else %}status-demo{% endif %}">
+                    <span class="pulse-dot"></span>
+                    {{ model_status }}
+                </span>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <main class="app-grid">
+            <!-- LEFT PANEL: DRAWING CANVAS -->
+            <section class="card glass-card canvas-card" id="drawing-panel">
+                <div class="card-header">
+                    <h2><i class="material-icons">draw</i> Draw Area</h2>
+                    <p class="card-subtitle">Draw a single digit (0-9) inside the grid below.</p>
+                </div>
+                
+                <div class="canvas-wrapper">
+                    <canvas id="paint-canvas" width="280" height="280"></canvas>
+                </div>
+
+                <div class="canvas-controls">
+                    <div class="slider-group">
+                        <label for="brush-size"><i class="material-icons">brush</i> Brush Size</label>
+                        <input type="range" id="brush-size" min="12" max="32" value="20">
+                        <span id="brush-size-val">20px</span>
+                    </div>
+                    
+                    <div class="button-row">
+                        <button class="btn btn-secondary" id="btn-clear">
+                            <i class="material-icons">delete_sweep</i> Clear
+                        </button>
+                        <button class="btn btn-primary" id="btn-predict">
+                            <i class="material-icons">analytics</i> Classify
+                        </button>
+                    </div>
+
+                    <div class="toggle-group">
+                        <label class="switch">
+                            <input type="checkbox" id="auto-predict-toggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label">Real-time Auto-predict</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL: PREDICTIONS & PROBABILITIES -->
+            <section class="card glass-card prediction-card" id="results-panel">
+                <div class="card-header">
+                    <h2><i class="material-icons">visibility</i> Class Prediction</h2>
+                    <p class="card-subtitle">Neural network categorical inference output.</p>
+                </div>
+
+                <div class="prediction-display">
+                    <div class="predicted-digit-box">
+                        <span class="prediction-title">Prediction</span>
+                        <div id="winning-digit">-</div>
+                        <span id="prediction-confidence">0.0% Confidence</span>
+                    </div>
+                </div>
+
+                <div class="probability-bars">
+                    <h3>Probability Distribution</h3>
+                    <div id="bars-container">
+                        <!-- Bars dynamically loaded by JS -->
+                        {% for i in range(10) %}
+                        <div class="probability-row" id="prob-row-{{ i }}">
+                            <span class="digit-label">{{ i }}</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" id="bar-fill-{{ i }}" style="width: 0%;"></div>
+                            </div>
+                            <span class="percentage-label" id="perc-label-{{ i }}">0%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- BOTTOM PANEL: CNN ACTIVATION EXPLORER -->
+            <section class="card glass-card activation-card" id="activations-panel">
+                <div class="card-header">
+                    <h2><i class="material-icons">psychology</i> CNN Activation Explorer (Hidden Layers)</h2>
+                    <p class="card-subtitle">Visualize what convolutional feature filters extract at each layer in real-time!</p>
+                </div>
+
+                <div class="activation-grids">
+                    <div class="activation-block">
+                        <div class="block-header">
+                            <h4>Layer 1: <code>conv_layer_1</code> (16 Filters Shown)</h4>
+                            <span class="badge">Conv2D + ReLU</span>
+                        </div>
+                        <p class="block-description">Detects low-level edge directions, basic lines, and corners.</p>
+                        <div class="image-wrapper" id="activation-wrapper-1">
+                            <div class="placeholder-text" id="act-placeholder-1">
+                                <i class="material-icons">hourglass_empty</i>
+                                <span>Draw on canvas to load activations</span>
+                            </div>
+                            <img id="activation-img-1" class="activation-img hidden" src="" alt="Layer 1 Activations">
+                        </div>
+                    </div>
+
+                    <div class="activation-block">
+                        <div class="block-header">
+                            <h4>Layer 2: <code>conv_layer_2</code> (16 Filters Shown)</h4>
+                            <span class="badge">Conv2D + ReLU</span>
+                        </div>
+                        <p class="block-description">Detects higher-level combinations of lines, curves, and shapes.</p>
+                        <div class="image-wrapper" id="activation-wrapper-2">
+                            <div class="placeholder-text" id="act-placeholder-2">
+                                <i class="material-icons">hourglass_empty</i>
+                                <span>Draw on canvas to load activations</span>
+                            </div>
+                            <img id="activation-img-2" class="activation-img hidden" src="" alt="Layer 2 Activations">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- DIAGNOSTICS & DETAILS MODAL/TAB -->
+        <section class="card glass-card details-card" id="model-details-panel">
+            <div class="tab-header" id="details-toggle">
+                <h2><i class="material-icons">insights</i> Model Architecture & Training Diagnostics</h2>
+                <i class="material-icons toggle-icon">expand_more</i>
+            </div>
+            
+            <div class="details-content hidden" id="details-content">
+                <div class="details-grid">
+                    <div class="details-info">
+                        <h3>Model Architecture Details</h3>
+                        <p>This deep learning model is an <strong>Artificial Convolutional Neural Network (CNN)</strong> engineered specifically for structural pattern recognition on spatial matrix inputs.</p>
+                        
+                        <div class="architecture-steps">
+                            <div class="step">
+                                <span class="step-num">1</span>
+                                <div>
+                                    <strong>Input Grid ($28 \times 28 \times 1$)</strong>
+                                    <p>Grayscale drawing inputs converted to normalized numerical arrays.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">2</span>
+                                <div>
+                                    <strong>Convolution Layer 1 (32 Filters, $3 \times 3$)</strong>
+                                    <p>Extracts localized spatial features like lines, edges, and texture gradients.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">3</span>
+                                <div>
+                                    <strong>Max Pooling (Size $2 \times 2$)</strong>
+                                    <p>Reduces dimensional size, providing robust translational invariance.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">4</span>
+                                <div>
+                                    <strong>Convolution Layer 2 (64 Filters, $3 \times 3$)</strong>
+                                    <p>Combines low-level features to reconstruct geometric structures and shapes.</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-num">5</span>
+                                <div>
+                                    <strong>Dense Classifier + Dropout (50%)</strong>
+                                    <p>Flattened feature outputs passed to fully connected layers for probability computation. Dropout prevents overfitting.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="details-plots">
+                        <h3>Training Diagnostics Metrics</h3>
+                        <p class="plot-subtitle">Graphs generated dynamically from the training execution.</p>
+                        
+                        <div class="plots-container">
+                            <div class="plot-card">
+                                <h5>Loss & Accuracy Curves</h5>
+                                <div class="plot-img-container">
+                                    <img src="{{ url_for('static', filename='assets/training_curves.png') }}" onerror="this.src='https://placehold.co/600x250/11131c/8b5cf6?text=Training+Graphs+Available+After+Training'" alt="Model Training Curves">
+                                </div>
+                            </div>
+                            
+                            <div class="plot-card">
+                                <h5>Test Confusion Matrix Heatmap</h5>
+                                <div class="plot-img-container">
+                                    <img src="{{ url_for('static', filename='assets/confusion_matrix.png') }}" onerror="this.src='https://placehold.co/600x250/11131c/8b5cf6?text=Confusion+Matrix+Available+After+Training'" alt="Model Confusion Matrix">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <p>Digit Recognition Studio — Powered by TensorFlow, Flask, and Modern Web Standards</p>
+        </footer>
+    </div>
+
+    <!-- Client-side JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
