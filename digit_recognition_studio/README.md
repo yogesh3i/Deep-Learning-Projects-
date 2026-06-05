@@ -10,6 +10,8 @@ pinned: false
 
 # 🔢 Digit Recognition Studio — Interactive Deep Learning
 
+[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Space-blue)](https://huggingface.co/spaces/yogesh3i/digit-classification-studio)
+
 An interactive, glassmorphic handwritten digit recognition platform powered by a Convolutional Neural Network (CNN) trained in TensorFlow/Keras. The project features a stunning web dashboard allowing users to draw digits and explore the model's internal feature representations (what the CNN "sees") in real-time.
 
 ---
