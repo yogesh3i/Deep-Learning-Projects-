@@ -26,6 +26,17 @@ def load_deep_learning_model():
         print("[-] TensorFlow is not installed. Running in Demo Mode.")
         return
     
+    # Auto-train the model if it is missing (highly useful for cloud deployments!)
+    if not os.path.exists(MODEL_PATH):
+        print("[*] Model file not found. Triggering automated training script (train.py)...")
+        try:
+            import subprocess
+            # Run train.py to train the CNN and generate all assets
+            subprocess.run(["python", "train.py"], check=True)
+            print("[+] Automated training completed successfully!")
+        except Exception as e:
+            print(f"[-] Automated training failed: {e}. Falling back to Demo Mode.")
+            
     if os.path.exists(MODEL_PATH):
         try:
             model = tf.keras.models.load_model(MODEL_PATH)
@@ -48,7 +59,7 @@ def load_deep_learning_model():
         except Exception as e:
             print(f"[-] Error loading model: {e}. Running in Demo Mode.")
     else:
-        print(f"[-] Model file {MODEL_PATH} not found. Running in Demo Mode (Please run python train.py first).")
+        print(f"[-] Model file {MODEL_PATH} not found. Running in Demo Mode.")
 
 # Initialise model loading
 load_deep_learning_model()
@@ -215,5 +226,8 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Run locally on port 5000
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    # Hugging Face Spaces binds to 0.0.0.0 and uses port 7860 (or passes a dynamic PORT env variable)
+    port = int(os.environ.get('PORT', 7860))
+    # We set debug=False in production mode
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

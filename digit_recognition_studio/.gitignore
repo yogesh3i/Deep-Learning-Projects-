@@ -1,0 +1,17 @@
+# Ignore trained model binary
+digit_model.h5
+
+# Ignore local virtual environment
+venv/
+.venv/
+env/
+
+# Ignore Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local system files
+.DS_Store
+Thumbs.db
